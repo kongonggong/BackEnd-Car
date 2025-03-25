@@ -1,0 +1,43 @@
+const express = require('express');
+const Car = require('../models/Car');
+const router = express.Router();
+
+// Add a new car
+router.post('/add', async (req, res) => {
+    try {
+        const { make, model, year, rentalPrice, available } = req.body;
+        const newCar = new Car({ make, model, year, rentalPrice, available });
+        await newCar.save();
+        res.status(201).json({ message: 'Car added successfully', car: newCar });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+// 🔎 ค้นหาและกรองรถ พร้อมตรวจสอบสถานะว่าง
+router.get('/search', async (req, res) => {
+    try {
+        const { make, model, year, minPrice, maxPrice, available } = req.query;
+        let filter = {};
+
+        if (make) filter.make = new RegExp(make, 'i');
+        if (model) filter.model = new RegExp(model, 'i');
+        if (year) filter.year = parseInt(year);
+        if (minPrice || maxPrice) {
+            filter.rentalPrice = {};
+            if (minPrice) filter.rentalPrice.$gte = parseInt(minPrice);
+            if (maxPrice) filter.rentalPrice.$lte = parseInt(maxPrice);
+        }
+        if (available !== undefined) {
+            filter.available = available === 'true'; // ✅ แปลง String เป็น Boolean
+        }
+
+        const cars = await Car.find(filter);
+        if (cars.length === 0) {
+            return res.status(404).json({ message: 'No cars available matching the criteria' });
+        }
+        res.json(cars);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+module.exports = router;

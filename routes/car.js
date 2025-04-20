@@ -148,7 +148,7 @@ router.delete('/:id', protect, authorize('admin', 'car-owner'), async (req, res)
             return res.status(403).json({ message: 'You are not authorized to delete this car' });
         }
 
-        await car.remove();
+        await Car.findByIdAndDelete(carId); // Use findByIdAndDelete instead of car.remove()
         res.json({ message: 'Car deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });

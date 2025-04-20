@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const Provider = require('../models/Provider');
 const { logoutUser } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware'); // Import the protect middleware
+const { authorize } = require('../middleware/auth'); // Import the authorize middleware
 
 const router = express.Router();
 
@@ -13,15 +14,14 @@ router.post('/register', async (req, res) => {
   try {
     const { name, telephone, email, password, role } = req.body;
     
-    // ✅ Default role to "user" if not specified
-    const validRole = role === "admin" ? "admin" : "user";
+    // const validRole = role === "admin" ? "admin" : "user";
 
     // ✅ Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
     // ✅ Create new user
-    const user = await User.create({ name, telephone, email, password, role: validRole });
+    const user = await User.create({ name, telephone, email, password, role: role });
 
     res.status(201).json({ message: 'User registered successfully', user });
   } catch (error) {
@@ -86,5 +86,15 @@ router.get('/me', protect, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// // Example: Only admins can access this route
+// router.get('/admin-only', protect, authorize('admin'), (req, res) => {
+//   res.status(200).json({ message: 'Welcome, Admin!' });
+// });
+
+// // Example: Car owners and admins can access this route
+// router.get('/owner-or-admin', protect, authorize('car-owner', 'admin'), (req, res) => {
+//   res.status(200).json({ message: 'Welcome, Car Owner or Admin!' });
+// });
 
 module.exports = router;

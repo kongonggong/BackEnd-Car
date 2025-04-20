@@ -1,32 +1,19 @@
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const jwt = require('jsonwebtoken');
 
 const registerUser = async (req, res) => {
-  const { name, telephone, email, password } = req.body;
+  const { name, telephone, email, password, role } = req.body;
 
-  const userExists = await User.findOne({ email });
-
-  if (userExists) {
-    res.status(400).json({ message: 'User already exists' });
-    return;
-  }
-
-  const user = await User.create({
-    name,
-    telephone,
-    email,
-    password,
-  });
-
-  if (user) {
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user._id),
+  try {
+    const user = await User.create({ name, telephone, email, password, role });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE,
     });
-  } else {
-    res.status(400).json({ message: 'Invalid user data' });
+
+    res.status(201).json({ success: true, token });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 

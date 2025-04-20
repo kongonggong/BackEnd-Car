@@ -71,4 +71,20 @@ router.get('/search-by-user', protect, async (req, res) => {
     }
 });
 
+// Get details of an individual car by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const carId = req.params.id;
+        const car = await Car.findById(carId);
+
+        if (!car) {
+            return res.status(404).json({ message: 'Car not found' });
+        }
+
+        res.json(car);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

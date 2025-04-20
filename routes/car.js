@@ -71,6 +71,34 @@ router.get('/search-by-user', protect, async (req, res) => {
     }
 });
 
+// Search cars with owner information
+router.get('/search-with-owner', async (req, res) => {
+    try {
+        const { make, model, year, minPrice, maxPrice, available } = req.query;
+        let filter = {};
+
+        if (make) filter.make = new RegExp(make, 'i');
+        if (model) filter.model = new RegExp(model, 'i');
+        if (year) filter.year = parseInt(year);
+        if (minPrice || maxPrice) {
+            filter.rentalPrice = {};
+            if (minPrice) filter.rentalPrice.$gte = parseInt(minPrice);
+            if (maxPrice) filter.rentalPrice.$lte = parseInt(maxPrice);
+        }
+        if (available !== undefined) {
+            filter.available = available === 'true';
+        }
+
+        const cars = await Car.find(filter).populate('createdBy', 'name');
+        if (cars.length === 0) {
+            return res.status(404).json({ message: 'No cars available matching the criteria' });
+        }
+        res.json(cars);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Get details of an individual car by ID
 router.get('/:id', async (req, res) => {
     try {

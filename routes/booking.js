@@ -14,8 +14,16 @@ router.get('/', protect, async (req, res) => {
     const userId = req.user.id;  // ✅ Get userId from JWT token
     console.log("🔍 Fetching bookings for logged-in user:", userId);
 
-    const bookings = await Booking.find({ user: userId }).populate("provider");
-    
+    // Populate the car and its createdBy (provider) field
+    const bookings = await Booking.find({ user: userId })
+      .populate({
+        path: 'car',
+        populate: {
+          path: 'createdBy', // Populate the provider (createdBy field in Car)
+          select: 'name address telephone', // Select specific fields
+        },
+      });
+
     if (!bookings.length) {
       return res.status(404).json({ message: "No bookings found for this user" });
     }

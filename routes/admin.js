@@ -36,9 +36,16 @@ const checkAdmin = async (req, res, next) => {
 // ✅ GET all bookings (Admin Only)
 router.get('/bookings', checkAdmin, async (req, res) => {
   try {
+    // Populate the car and its createdBy (provider) field
     const bookings = await Booking.find()
-      .populate("user", "name email")
-      .populate("provider", "name address telephone");
+      .populate({
+        path: 'car',
+        populate: {
+          path: 'createdBy', // Populate the provider (createdBy field in Car)
+          select: 'name address telephone', // Select specific fields
+        },
+      })
+      .populate('user', 'name email'); // Populate the user who made the booking
 
     res.status(200).json({ bookings });
   } catch (error) {
@@ -55,9 +62,16 @@ router.get('/bookings/:bookingId', checkAdmin, async (req, res) => {
       return res.status(400).json({ message: "Invalid bookingId format" });
     }
 
+    // Populate the car and its createdBy (provider) field
     const booking = await Booking.findById(bookingId)
-      .populate("user", "name email")
-      .populate("provider", "name address telephone");
+      .populate({
+        path: 'car',
+        populate: {
+          path: 'createdBy', // Populate the provider (createdBy field in Car)
+          select: 'name address telephone', // Select specific fields
+        },
+      })
+      .populate('user', 'name email'); // Populate the user who made the booking
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });

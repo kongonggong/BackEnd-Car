@@ -1,16 +1,31 @@
 const Booking = require('../models/Booking');
+const Car = require('../models/Car');
 
 const createBooking = async (req, res) => {
-  const { date, provider } = req.body;
+  try {
+    const { carId, pickupDate, returnDate } = req.body;
 
-  const booking = new Booking({
-    user: req.user._id,
-    date,
-    provider,
-  });
+    const car = await Car.findById(carId).populate('createdBy'); // Use createdBy to reference Provider
+    if (!car || !car.available) {
+      return res.status(400).json({ message: 'Car not available or does not exist.' });
+    }
 
-  const createdBooking = await booking.save();
-  res.status(201).json(createdBooking);
+    const booking = new Booking({
+      user: req.user._id,
+      car: car._id,
+      pickupDate,
+      returnDate,
+    });
+
+    await booking.save();
+
+    car.available = false;
+    await car.save();
+
+    res.status(201).json({ message: 'Booking created successfully', booking });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
 };
 
 const getBookings = async (req, res) => {

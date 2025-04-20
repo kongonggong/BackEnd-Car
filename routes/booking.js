@@ -30,58 +30,45 @@ router.get('/', protect, async (req, res) => {
 // ✅ POST: Create a new booking (Only logged-in users)
 router.post('/', protect, async (req, res) => {
   try {
-    const { carModel, pickupDate, returnDate, providerId } = req.body;
-    const userId = req.user.id; // ✅ Get user ID from token
+    const { carId, pickupDate, returnDate } = req.body;
+    const userId = req.user.id;
 
-    console.log("🔍 Creating booking for user:", userId);
-
-    if (!mongoose.Types.ObjectId.isValid(providerId)) {
-      return res.status(200).json({ message: "Valid providerId" });
+    // Fetch the car and its provider
+    const car = await Car.findById(carId).populate('createdBy'); // Use createdBy to reference Provider
+    if (!car || !car.available) {
+      return res.status(400).json({ message: 'Car not available or does not exist.' });
     }
 
-    const providerExists = await Provider.findById(providerId);
-    if (!providerExists) {
-      return res.status(404).json({ message: "Provider not found" });
-    }
-
-    // ✅ Check user's existing bookings (Max 3)
-    const userBookings = await Booking.countDocuments({ user: userId });
-    if (userBookings >= 3) {
-      return res.status(400).json({ message: "You cannot book more than 3 cars." });
-    }
-
-    // ✅ Check if the car is available
-    const car = await Car.findOne({ model: carModel, available: true });
-    if (!car) {
-      return res.status(400).json({ message: "Car not available or does not exist." });
-    }
-
-    // ✅ Create booking
-    const booking = new Booking({ user: userId, carModel, pickupDate, returnDate, provider: providerId });
+    // Create booking
+    const booking = new Booking({
+      user: userId,
+      car: car._id,
+      pickupDate,
+      returnDate,
+    });
     await booking.save();
 
-    // ✅ Mark car as unavailable
+    // Mark car as unavailable
     car.available = false;
     await car.save();
 
-    res.status(201).json({ message: "Booking created successfully", booking });
+    res.status(201).json({ message: 'Booking created successfully', booking });
   } catch (error) {
-    console.error("❌ Error creating booking:", error.message);
-    res.status(500).json({ error: "Server error", details: error.message });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 // ✅ PUT: Update a booking (Only user who made it or admin)
 router.put('/:bookingId', protect, async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { carModel, pickupDate, returnDate } = req.body;
+    const { carId, pickupDate, returnDate } = req.body; // Use carId instead of carModel
     console.log("🔍 Updating booking:", bookingId);
 
     if (!mongoose.Types.ObjectId.isValid(bookingId)) {
       return res.status(400).json({ message: "Invalid bookingId format" });
     }
 
-    let booking = await Booking.findById(bookingId);
+    let booking = await Booking.findById(bookingId).populate('car');
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
@@ -91,19 +78,18 @@ router.put('/:bookingId', protect, async (req, res) => {
       return res.status(403).json({ message: "Unauthorized to update this booking" });
     }
 
-    // ✅ If carModel is being changed, check availability
-    if (carModel && carModel !== booking.carModel) {
-      console.log(`🔍 Checking availability for new car: ${carModel}`);
+    // ✅ If carId is being changed, check availability
+    if (carId && carId !== booking.car.toString()) {
+      console.log(`🔍 Checking availability for new car: ${carId}`);
 
-      const newCar = await Car.findOne({ model: carModel, available: true });
-
-      if (!newCar) {
+      const newCar = await Car.findById(carId);
+      if (!newCar || !newCar.available) {
         return res.status(400).json({ message: "The requested car is not available." });
       }
 
       // ✅ Mark previous car as available
-      const previousCar = await Car.findOneAndUpdate(
-        { model: booking.carModel },
+      const previousCar = await Car.findByIdAndUpdate(
+        booking.car,
         { available: true },
         { new: true }
       );
@@ -111,7 +97,7 @@ router.put('/:bookingId', protect, async (req, res) => {
       if (previousCar) {
         console.log(`✅ Previous car ${previousCar.model} is now available.`);
       } else {
-        console.warn(`⚠ Previous car ${booking.carModel} not found in DB.`);
+        console.warn(`⚠ Previous car not found in DB.`);
       }
 
       // ✅ Mark new car as unavailable
@@ -119,8 +105,8 @@ router.put('/:bookingId', protect, async (req, res) => {
       await newCar.save();
       console.log(`✅ New car ${newCar.model} is now booked.`);
 
-      // ✅ Update the booking with the new car model
-      booking.carModel = carModel;
+      // ✅ Update the booking with the new car
+      booking.car = carId;
     }
 
     // ✅ Update the other fields if provided

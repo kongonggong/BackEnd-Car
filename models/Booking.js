@@ -2,10 +2,9 @@ const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  carModel: { type: String, required: true },
   pickupDate: { type: Date, required: true },
   returnDate: { type: Date, required: true },
-  provider: { type: mongoose.Schema.Types.ObjectId, ref: 'Provider', required: true },
+  car: { type: mongoose.Schema.Types.ObjectId, ref: 'Car', required: true }, // Reference to Car
   status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'pending' },
   paymentStatus: {
     type: String,

@@ -89,7 +89,8 @@ router.get('/search-with-owner', async (req, res) => {
             filter.available = available === 'true';
         }
 
-        const cars = await Car.find(filter).populate('createdBy', 'name');
+        // Populate createdBy to include provider details
+        const cars = await Car.find(filter).populate('createdBy', 'name address telephone');
         if (cars.length === 0) {
             return res.status(404).json({ message: 'No cars available matching the criteria' });
         }

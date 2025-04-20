@@ -7,11 +7,12 @@ It includes **user authentication**, **booking management**, and **admin control
 ---
 
 ## ✅ Features
--  **User Registration, Login, and Logout**
--  **Users can book, view, edit, and delete rentals** (Max 3 bookings per user)
--  **Admins can view, update, and delete any booking**
--  **JWT Authentication for secure API access**
--  **MongoDB integration for persistent data storage**
+- **User Registration, Login, and Logout**
+- **Users can book, view, edit, and delete rentals** (Max 3 bookings per user)
+- **Admins and Car Owners can create car listings**
+- **Admins can view, update, and delete any booking**
+- **JWT Authentication for secure API access**
+- **MongoDB integration for persistent data storage**
 
 ---
 

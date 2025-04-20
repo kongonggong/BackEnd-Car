@@ -1,12 +1,20 @@
 const express = require('express');
 const Car = require('../models/Car');
 const router = express.Router();
+const { protect, authorize } = require('../middleware/authMiddleware'); // Import middleware
 
 // Add a new car
-router.post('/add', async (req, res) => {
+router.post('/add', protect, authorize('admin', 'car-owner'), async (req, res) => {
     try {
         const { make, model, year, rentalPrice, available } = req.body;
-        const newCar = new Car({ make, model, year, rentalPrice, available });
+        const newCar = new Car({ 
+            make, 
+            model, 
+            year, 
+            rentalPrice, 
+            available, 
+            createdBy: req.user._id // Set the user who created the car
+        });
         await newCar.save();
         res.status(201).json({ message: 'Car added successfully', car: newCar });
     } catch (error) {

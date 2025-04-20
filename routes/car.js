@@ -52,7 +52,7 @@ router.get('/search', async (req, res) => {
 // 🔎 Search cars by userId
 router.get('/search-by-user', protect, async (req, res) => {
     try {
-        const { userId } = req.query;
+        const userId = req.user.id;
 
         if (!userId) {
             return res.status(400).json({ message: 'User ID is required' });

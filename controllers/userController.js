@@ -45,8 +45,34 @@ const logoutUser=async(req,res,next)=>{
   });
 };
 
+const updateUser = async (req, res) => {
+  try {
+    const { name, telephone, email, password } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    if (telephone) user.telephone = telephone;
+    if (email) user.email = email;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    const updatedUser = await user.save();
+    res.status(200).json({ message: 'User updated successfully', user: updatedUser });
+  } catch (error) {
+    console.error("❌ Update User Error:", error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
+  updateUser,
 };

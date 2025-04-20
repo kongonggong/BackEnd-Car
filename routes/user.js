@@ -3,7 +3,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Provider = require('../models/Provider');
-const { logoutUser } = require('../controllers/userController');
+const { logoutUser, updateUser } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware'); // Import the protect middleware
 const { authorize } = require('../middleware/auth'); // Import the authorize middleware
 
@@ -86,6 +86,9 @@ router.get('/me', protect, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// ✅ Update User Details
+router.put('/update', protect, updateUser);
 
 // // Example: Only admins can access this route
 // router.get('/admin-only', protect, authorize('admin'), (req, res) => {

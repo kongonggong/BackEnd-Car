@@ -48,4 +48,27 @@ router.get('/search', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// 🔎 Search cars by userId
+router.get('/search-by-user', protect, async (req, res) => {
+    try {
+        const { userId } = req.query;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+
+        const cars = await Car.find({ createdBy: userId });
+
+        if (cars.length === 0) {
+            return res.status(404).json({ message: 'No cars found for the given user ID' });
+        }
+
+        res.json(cars);
+    } catch (error) {
+        console.error("❌ Error searching cars by user ID:", error.message);
+        res.status(500).json({ error: 'Server error', details: error.message });
+    }
+});
+
 module.exports = router;

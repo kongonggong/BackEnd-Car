@@ -87,4 +87,44 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// Update an existing car by ID
+router.put('/:id', protect, authorize('admin', 'car-owner'), async (req, res) => {
+    try {
+        const carId = req.params.id;
+        const updates = req.body;
+
+        const updatedCar = await Car.findByIdAndUpdate(carId, updates, { new: true });
+
+        if (!updatedCar) {
+            return res.status(404).json({ message: 'Car not found' });
+        }
+
+        res.json({ message: 'Car updated successfully', car: updatedCar });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete a car by ID
+router.delete('/:id', protect, authorize('admin', 'car-owner'), async (req, res) => {
+    try {
+        const carId = req.params.id;
+        const car = await Car.findById(carId);
+
+        if (!car) {
+            return res.status(404).json({ message: 'Car not found' });
+        }
+
+        // Check if the user is authorized to delete the car
+        if (req.user.role !== 'admin' && car.createdBy.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You are not authorized to delete this car' });
+        }
+
+        await car.remove();
+        res.json({ message: 'Car deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

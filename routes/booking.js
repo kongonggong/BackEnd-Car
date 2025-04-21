@@ -69,7 +69,7 @@ router.post('/', protect, async (req, res) => {
 router.put('/:bookingId', protect, async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { carId, pickupDate, returnDate } = req.body; // Use carId instead of carModel
+    const { carId, pickupDate, returnDate, status } = req.body; // Include status in fields to update
     console.log("🔍 Updating booking:", bookingId);
 
     if (!mongoose.Types.ObjectId.isValid(bookingId)) {
@@ -120,7 +120,9 @@ router.put('/:bookingId', protect, async (req, res) => {
     // ✅ Update the other fields if provided
     if (pickupDate) booking.pickupDate = pickupDate;
     if (returnDate) booking.returnDate = returnDate;
+    if (status) booking.status = status; // Update the status field
 
+    // ✅ Save the updated booking
     await booking.save();
 
     res.status(200).json({ message: "Booking updated successfully", booking });

@@ -90,14 +90,5 @@ router.get('/me', protect, async (req, res) => {
 // ✅ Update User Details
 router.put('/update', protect, updateUser);
 
-// // Example: Only admins can access this route
-// router.get('/admin-only', protect, authorize('admin'), (req, res) => {
-//   res.status(200).json({ message: 'Welcome, Admin!' });
-// });
-
-// // Example: Car owners and admins can access this route
-// router.get('/owner-or-admin', protect, authorize('car-owner', 'admin'), (req, res) => {
-//   res.status(200).json({ message: 'Welcome, Car Owner or Admin!' });
-// });
 
 module.exports = router;

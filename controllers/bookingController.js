@@ -33,6 +33,15 @@ const getBookings = async (req, res) => {
   res.json(bookings);
 };
 
+const getAllBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find().populate('user car'); // Populate user and car details
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+};
+
 const updateBooking = async (req, res) => {
   const booking = await Booking.findById(req.params.id);
 
@@ -66,4 +75,5 @@ module.exports = {
   getBookings,
   updateBooking,
   deleteBooking,
+  getAllBookings, // Export the new method
 };
